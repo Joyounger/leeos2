@@ -18,8 +18,8 @@ sudo apt-get install g++-arm-linux-gnueabihf
  ~/Downloads/skyeye-1.2.6_rc1
 根据执行skyeye-1.2.6_rc1/INSTALL的说明
 1 执行 ./configure
-2 执行 make 后
-编译错误1：
+2 执行 make 后  
+编译错误1：  
 In file included from /usr/include/fcntl.h:289:0,
                  from nandflash/nandflash_smallblock.c:19:
 In function ‘open’,
@@ -33,7 +33,7 @@ if ((nf->fdump= open(dev->dump, FILE_FLAG)) < 0) 改为：
 if ((nf->fdump= open(dev->dump, FILE_FLAG, 0777)) < 0)
 
 
-编译错误2：
+编译错误2：  
 gcc  -g -O2   -o skyeye skyeye.o ./utils/libutils.a ./arch/arm/libarm.a ./device/libdev.a ./arch/mips/libmips.a ./arch/ppc/libppc.a ./arch/bfin/libbfin.a ./arch/mips/libmips.a ./arch/coldfire/libcoldfire.a -lc ./utils/libutils.a  -lbfd -lm -lc 
 ./arch/mips/libmips.a(decoder.o)：在函数‘decode’中：
 /home/kolya/Downloads/skyeye-1.2.6_rc1/arch/mips/common/decoder.c:1079：对‘sign_extend_UInt32’未定义的引用
@@ -63,5 +63,50 @@ UInt32 sign_extend_UInt32(UInt32 x, int s)
 
 skyeye-1.2.6_rc1/arch/mips/common/decoder.c:231行 注释掉divide_Int32(x, y);
 skyeye-1.2.6_rc1/arch/mips/common/decoder.c:240行 注释掉divide_UInt32(x, y);
+
+编译错误3：  
+checking for C++ compiler default output file name... 
+configure: error: C++ compiler cannot create executables
+See `config.log' for more details.  
+解决方法:安装g++  
+
+编译错误4：  
+checking for gcc... configure: error: **** gcc < 3.0 !!!
+解决方法:
+在configure文件中有:
+```
+  case `$gcc_exec -dumpversion | sed -e 's,\..*,.,' -e q` in
+    3.*)
+      ;;
+    [456789].*)
+      dbct=false
+      ;;
+    *)
+      { { echo "$as_me:$LINENO: error: **** gcc < 3.0 !!!" >&5
+      echo "$as_me: error: **** gcc < 3.0 !!!" >&2;}
+      { (exit 1); exit 1; }; }
+      ;;
+  esac
+```
+gcc版本为7.3.0, 但执行gcc -dumpversion输出为7
+说明这里把gcc的版本误判为了小于3. 
+解决方法为case判断中添加对7的处理逻辑
+```
+  case `$gcc_exec -dumpversion | sed -e 's,\..*,.,' -e q` in
+    3.*)
+      ;;
+    7)
+      dbct=false
+      ;;
+    [456789].*)
+      dbct=false
+      ;;
+    *)
+      { { echo "$as_me:$LINENO: error: **** gcc < 3.0 !!!" >&5
+      echo "$as_me: error: **** gcc < 3.0 !!!" >&2;}
+      { (exit 1); exit 1; }; }
+      ;;
+  esac
+```
 
 之后重新make即可编译出skyeye
